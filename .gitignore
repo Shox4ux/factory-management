@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+dist/
+*.egg-info/
+.pytest_cache/
+test.db
+.coverage
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.g.dart
+*.freezed.dart
+
+# Env
+.env
+.env.dev
+.env.docker
+*.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Claude
+.claude/
