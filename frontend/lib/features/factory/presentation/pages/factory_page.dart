@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:factory_management/app/di/injection.dart';
-import 'package:factory_management/core/constants/app_strings.dart';
 import 'package:factory_management/core/utils/app_toast.dart';
 import 'package:factory_management/features/factory/domain/entities/factory_entity.dart';
 import 'package:factory_management/features/factory/presentation/bloc/factory_bloc.dart';
@@ -13,6 +12,7 @@ import 'package:factory_management/features/factory_category/domain/entities/cat
 import 'package:factory_management/features/factory_category/presentation/bloc/category_bloc.dart';
 import 'package:factory_management/features/factory_category/presentation/bloc/category_event.dart';
 import 'package:factory_management/features/factory_category/presentation/bloc/category_state.dart';
+import 'package:factory_management/l10n/app_localizations.dart';
 import 'package:factory_management/shared/widgets/app_dialog.dart';
 import 'package:factory_management/shared/widgets/page_layout.dart';
 
@@ -80,6 +80,7 @@ class _FactoryPageContentState extends State<_FactoryPageContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocListener<FactoryBloc, FactoryState>(
       listener: (context, state) {
         if (state is FactoryActionSuccess) {
@@ -89,19 +90,19 @@ class _FactoryPageContentState extends State<_FactoryPageContent> {
         }
       },
       child: PageLayout(
-        title: AppStrings.factories,
-        addLabel: AppStrings.addFactory,
+        title: l10n.navFactories,
+        addLabel: l10n.addFactory,
         onAdd: _showAdd,
         filterWidgets: [
           FilterField(
-            hint: AppStrings.searchByName,
+            hint: l10n.searchByName,
             onChanged: (v) {
               _nameFilter = v;
               _reload();
             },
           ),
           FilterField(
-            hint: AppStrings.searchByProduct,
+            hint: l10n.searchByProduct,
             icon: Icons.inventory_2_outlined,
             onChanged: (v) {
               _productFilter = v;
@@ -112,11 +113,11 @@ class _FactoryPageContentState extends State<_FactoryPageContent> {
             builder: (context, catState) {
               final cats = catState is CategoryLoaded ? catState.categories : <CategoryEntity>[];
               return FilterDropdown<int>(
-                hint: AppStrings.searchByCategory,
+                hint: l10n.searchByCategory,
                 icon: Icons.category_outlined,
                 value: _categoryFilter,
                 items: [
-                  const DropdownMenuItem<int?>(value: null, child: Text('All categories')),
+                  DropdownMenuItem<int?>(value: null, child: Text(l10n.allCategories)),
                   ...cats.map((c) => DropdownMenuItem<int?>(value: c.id, child: Text(c.categoryName))),
                 ],
                 onChanged: (v) => setState(() => _categoryFilter = v),

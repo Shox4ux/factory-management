@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
 import 'package:factory_management/core/constants/app_sizes.dart';
-import 'package:factory_management/core/constants/app_strings.dart';
+import 'package:factory_management/core/locale/locale_controller.dart';
 import 'package:factory_management/core/theme/app_theme.dart';
+import 'package:factory_management/l10n/app_localizations.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget child;
@@ -11,13 +12,14 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isMobile = MediaQuery.of(context).size.width < AppSizes.mobileBreakpoint;
     if (isMobile) {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: AppThemeColors.of(context).drawerBg,
           foregroundColor: Colors.white,
-          title: const Text(AppStrings.appName, style: TextStyle(fontSize: AppFonts.lg, fontWeight: FontWeight.w700)),
+          title: Text(l10n.appName, style: const TextStyle(fontSize: AppFonts.lg, fontWeight: FontWeight.w700)),
         ),
         drawer: const _AppDrawer(),
         body: child,
@@ -39,6 +41,7 @@ class _AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final location = GoRouterState.of(context).uri.path;
     final c = AppThemeColors.of(context);
     return SizedBox(
@@ -65,9 +68,9 @@ class _AppDrawer extends StatelessWidget {
                       child: const Icon(Icons.factory_outlined, color: Colors.white, size: 18),
                     ),
                     const SizedBox(width: 10),
-                    const Text(
-                      AppStrings.appName,
-                      style: TextStyle(
+                    Text(
+                      l10n.appName,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: AppFonts.md,
                         fontWeight: FontWeight.w700,
@@ -79,26 +82,26 @@ class _AppDrawer extends StatelessWidget {
               ),
               _DrawerItem(
                 icon: Icons.factory_outlined,
-                label: AppStrings.factories,
+                label: l10n.navFactories,
                 path: '/factories',
                 isActive: location.startsWith('/factories'),
               ),
               _DrawerItem(
                 icon: Icons.inventory_2_outlined,
-                label: AppStrings.products,
+                label: l10n.navProducts,
                 path: '/products',
                 isActive: location.startsWith('/products'),
               ),
               _DrawerItem(
                 icon: Icons.category_outlined,
-                label: AppStrings.categories,
+                label: l10n.navCategories,
                 path: '/categories',
                 isActive: location.startsWith('/categories'),
               ),
               const Spacer(),
               // Theme toggle
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 child: ValueListenableBuilder<ThemeMode>(
                   valueListenable: ThemeController.instance,
                   builder: (_, mode, __) {
@@ -120,7 +123,7 @@ class _AppDrawer extends StatelessWidget {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                isDark ? 'Light Mode' : 'Dark Mode',
+                                isDark ? l10n.lightMode : l10n.darkMode,
                                 style: TextStyle(
                                   color: c.drawerItem,
                                   fontSize: AppFonts.base,
@@ -135,8 +138,74 @@ class _AppDrawer extends StatelessWidget {
                   },
                 ),
               ),
+              // Language switcher
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                child: ValueListenableBuilder<Locale>(
+                  valueListenable: LocaleController.instance,
+                  builder: (_, currentLocale, __) => Row(
+                    children: [
+                      for (final entry in const [
+                        ('EN', 'en'),
+                        ('RU', 'ru'),
+                        ('UZ', 'uz'),
+                      ])
+                        _LangButton(
+                          label: entry.$1,
+                          localeCode: entry.$2,
+                          isActive: currentLocale.languageCode == entry.$2,
+                          drawerColors: c,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 8),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LangButton extends StatelessWidget {
+  final String label;
+  final String localeCode;
+  final bool isActive;
+  final AppThemeColors drawerColors;
+
+  const _LangButton({
+    required this.label,
+    required this.localeCode,
+    required this.isActive,
+    required this.drawerColors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () => LocaleController.instance.setLocale(Locale(localeCode)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: isActive ? drawerColors.primary.withValues(alpha: 0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isActive ? drawerColors.primary : drawerColors.drawerItem.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive ? drawerColors.primary : drawerColors.drawerItem,
+              fontSize: AppFonts.xs,
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+              fontFamily: AppFonts.inter,
+            ),
           ),
         ),
       ),

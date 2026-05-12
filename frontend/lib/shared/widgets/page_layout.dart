@@ -2,8 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
 import 'package:factory_management/core/constants/app_sizes.dart';
-import 'package:factory_management/core/constants/app_strings.dart';
 import 'package:factory_management/core/theme/app_theme.dart';
+import 'package:factory_management/l10n/app_localizations.dart';
 import 'package:factory_management/shared/widgets/app_button.dart';
 
 class PageLayout extends StatelessWidget {
@@ -30,7 +30,6 @@ class PageLayout extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
           Container(
             color: c.surface,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -43,7 +42,6 @@ class PageLayout extends StatelessWidget {
             ),
           ),
           Divider(height: 1, color: c.border),
-          // Filter Bar
           Container(
             color: c.surface,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -55,7 +53,6 @@ class PageLayout extends StatelessWidget {
             ),
           ),
           Divider(height: 1, color: c.border),
-          // Table fills remaining space
           Expanded(child: table),
         ],
       ),
@@ -161,10 +158,7 @@ class FilterDropdown<T> extends StatelessWidget {
                   Text(hint, style: TextStyle(color: c.textHint, fontSize: AppFonts.base)),
                 ]);
               }
-              return Align(
-                alignment: Alignment.centerLeft,
-                child: item.child,
-              );
+              return Align(alignment: Alignment.centerLeft, child: item.child);
             }).toList(),
             items: items,
             onChanged: onChanged,
@@ -193,6 +187,7 @@ class AppTableWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final c = AppThemeColors.of(context);
     if (isLoading) {
       return Center(child: CircularProgressIndicator(color: c.primary));
@@ -210,19 +205,12 @@ class AppTableWrapper extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              isNetworkError ? 'Unable to reach server' : error!,
-              style: TextStyle(
-                color: c.textPrimary,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+              isNetworkError ? l10n.unableToReachServer : error!,
+              style: TextStyle(color: c.textPrimary, fontSize: 15, fontWeight: FontWeight.w500),
             ),
             if (isNetworkError) ...[
               const SizedBox(height: 4),
-              Text(
-                'Check that the backend is running',
-                style: TextStyle(color: c.textSecondary, fontSize: 13),
-              ),
+              Text(l10n.checkBackendRunning, style: TextStyle(color: c.textSecondary, fontSize: 13)),
             ],
           ],
         ),
@@ -235,7 +223,7 @@ class AppTableWrapper extends StatelessWidget {
           children: [
             Icon(Icons.inbox_outlined, size: 48, color: c.textHint),
             const SizedBox(height: 12),
-            Text(AppStrings.noData, style: TextStyle(color: c.textSecondary, fontSize: AppFonts.base)),
+            Text(l10n.noData, style: TextStyle(color: c.textSecondary, fontSize: AppFonts.base)),
           ],
         ),
       );
@@ -286,6 +274,7 @@ class AppTableWrapper extends StatelessWidget {
 }
 
 Widget actionCell(BuildContext context, {required VoidCallback onEdit, required VoidCallback onDelete}) {
+  final l10n = AppLocalizations.of(context)!;
   final c = AppThemeColors.of(context);
   return Row(
     mainAxisSize: MainAxisSize.min,
@@ -293,7 +282,7 @@ Widget actionCell(BuildContext context, {required VoidCallback onEdit, required 
       IconButton(
         icon: const Icon(Icons.edit_outlined, size: AppSizes.iconSize),
         color: c.primary,
-        tooltip: AppStrings.edit,
+        tooltip: l10n.actionEdit,
         onPressed: onEdit,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(),
@@ -302,7 +291,7 @@ Widget actionCell(BuildContext context, {required VoidCallback onEdit, required 
       IconButton(
         icon: const Icon(Icons.delete_outline, size: AppSizes.iconSize),
         color: c.error,
-        tooltip: AppStrings.delete,
+        tooltip: l10n.actionDelete,
         onPressed: onDelete,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(),

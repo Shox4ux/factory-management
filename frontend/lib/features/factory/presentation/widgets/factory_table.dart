@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
-import 'package:factory_management/core/constants/app_strings.dart';
 import 'package:factory_management/core/theme/app_theme.dart';
 import 'package:factory_management/features/factory/domain/entities/factory_entity.dart';
+import 'package:factory_management/l10n/app_localizations.dart';
 import 'package:factory_management/shared/widgets/page_layout.dart';
 
 class FactoryTable extends StatelessWidget {
@@ -23,17 +23,18 @@ class FactoryTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final c = AppThemeColors.of(context);
     return AppTableWrapper(
-      columns: const [
-        AppStrings.id,
-        AppStrings.name,
-        AppStrings.categoryHeader,
-        AppStrings.phoneHeader,
-        AppStrings.wechatHeader,
-        AppStrings.addressHeader,
-        AppStrings.productsHeader,
-        AppStrings.actions,
+      columns: [
+        l10n.colId,
+        l10n.colName,
+        l10n.colCategory,
+        l10n.colPhone,
+        l10n.colWechat,
+        l10n.colAddress,
+        l10n.colProducts,
+        l10n.colActions,
       ],
       isLoading: isLoading,
       error: error,

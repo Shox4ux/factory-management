@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
 import 'package:factory_management/core/constants/app_sizes.dart';
-import 'package:factory_management/core/constants/app_strings.dart';
 import 'package:factory_management/core/theme/app_theme.dart';
 import 'package:factory_management/features/factory/domain/entities/factory_entity.dart';
 import 'package:factory_management/features/product/domain/entities/product_entity.dart';
+import 'package:factory_management/l10n/app_localizations.dart';
 import 'package:factory_management/shared/widgets/app_button.dart';
 import 'package:factory_management/shared/widgets/app_dialog.dart';
 import 'package:factory_management/shared/widgets/app_text_field.dart';
@@ -27,8 +27,7 @@ class ProductFormDialog extends StatefulWidget {
 
 class _ProductFormDialogState extends State<ProductFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _name =
-      TextEditingController(text: widget.product?.name);
+  late final TextEditingController _name = TextEditingController(text: widget.product?.name);
   int? _factoryId;
   final List<_ModelRow> _models = [];
 
@@ -38,12 +37,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     _factoryId = widget.product?.factoryId;
     if (widget.product != null) {
       for (final m in widget.product!.models) {
-        _models.add(_ModelRow(
-          name: m.name,
-          price: m.price.toString(),
-          info: m.info,
-          images: m.images ?? '',
-        ));
+        _models.add(_ModelRow(name: m.name, price: m.price.toString(), info: m.info, images: m.images ?? ''));
       }
     }
   }
@@ -59,25 +53,23 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     final data = <String, dynamic>{
       'name': _name.text.trim(),
       'factory_id': _factoryId,
-      'models': _models
-          .map((m) => {
-                'name': m.nameCtrl.text.trim(),
-                'price': m.priceCtrl.text.trim(),
-                'info': m.infoCtrl.text.trim(),
-                if (m.imagesCtrl.text.trim().isNotEmpty)
-                  'images': m.imagesCtrl.text.trim(),
-              })
-          .toList(),
+      'models': _models.map((m) => {
+            'name': m.nameCtrl.text.trim(),
+            'price': m.priceCtrl.text.trim(),
+            'info': m.infoCtrl.text.trim(),
+            if (m.imagesCtrl.text.trim().isNotEmpty) 'images': m.imagesCtrl.text.trim(),
+          }).toList(),
     };
     widget.onSubmit(data);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEdit = widget.product != null;
     return AppDialog(
-      title: isEdit ? AppStrings.editProduct : AppStrings.addProductItem,
-      confirmLabel: isEdit ? AppStrings.update : AppStrings.create,
+      title: isEdit ? l10n.editProduct : l10n.addProduct,
+      confirmLabel: isEdit ? l10n.actionUpdate : l10n.actionCreate,
       onConfirm: _submit,
       maxWidth: AppSizes.dialogMaxWidthLg,
       content: Form(
@@ -91,42 +83,33 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
               children: [
                 Expanded(
                   child: AppDropdownField<int>(
-                    label: AppStrings.factories,
-                    hint: 'Select factory',
+                    label: l10n.navFactories,
+                    hint: l10n.selectFactory,
                     value: _factoryId,
                     items: widget.factories
-                        .map((f) => DropdownMenuItem(
-                              value: f.id,
-                              child: Text(f.name),
-                            ))
+                        .map((f) => DropdownMenuItem(value: f.id, child: Text(f.name)))
                         .toList(),
                     onChanged: (v) => setState(() => _factoryId = v),
-                    validator: (v) => v == null ? 'Required' : null,
+                    validator: (v) => v == null ? l10n.fieldRequired : null,
                   ),
                 ),
                 const SizedBox(width: AppSizes.base),
                 Expanded(
                   child: AppTextField(
-                    label: AppStrings.productName,
+                    label: l10n.fieldProductName,
                     controller: _name,
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) => v == null || v.isEmpty ? l10n.fieldRequired : null,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: AppSizes.xl),
-
             Row(
               children: [
-                const Text(
-                  AppStrings.models,
-                  style: TextStyle(
-                      fontSize: AppFonts.lg, fontWeight: FontWeight.w700),
-                ),
+                Text(l10n.colModels, style: const TextStyle(fontSize: AppFonts.lg, fontWeight: FontWeight.w700)),
                 const Spacer(),
                 AppButton(
-                  label: AppStrings.addModel,
+                  label: l10n.addModel,
                   icon: Icons.add,
                   small: true,
                   variant: AppButtonVariant.secondary,
@@ -135,20 +118,15 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
               ],
             ),
             const SizedBox(height: AppSizes.sm),
-
             if (_models.isEmpty)
               Builder(builder: (ctx) {
                 final c = AppThemeColors.of(ctx);
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSizes.base),
-                  child: Text(
-                    'No models added.',
-                    style: TextStyle(color: c.textSecondary, fontSize: AppFonts.sm),
-                  ),
+                  child: Text(l10n.noModelsAdded, style: TextStyle(color: c.textSecondary, fontSize: AppFonts.sm)),
                 );
               }),
-
-            ..._models.asMap().entries.map((e) => _buildModelRow(e.key, e.value)),
+            ..._models.asMap().entries.map((e) => _buildModelRow(e.key, e.value, l10n)),
             const SizedBox(height: AppSizes.sm),
           ],
         ),
@@ -156,7 +134,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     );
   }
 
-  Widget _buildModelRow(int mi, _ModelRow model) {
+  Widget _buildModelRow(int mi, _ModelRow model, AppLocalizations l10n) {
     return Builder(builder: (context) {
       final c = AppThemeColors.of(context);
       return Container(
@@ -172,19 +150,14 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
               padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
               decoration: BoxDecoration(
                 color: c.tableHeader,
-                borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(AppSizes.radiusMd)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.radiusMd)),
               ),
               child: Row(
                 children: [
-                  Text('Model ${mi + 1}',
-                      style: const TextStyle(
-                          fontSize: AppFonts.sm,
-                          fontWeight: FontWeight.w600)),
+                  Text(l10n.modelN(mi + 1), style: const TextStyle(fontSize: AppFonts.sm, fontWeight: FontWeight.w600)),
                   const Spacer(),
                   IconButton(
-                    icon: Icon(Icons.close,
-                        size: AppSizes.iconSizeSm, color: c.error),
+                    icon: Icon(Icons.close, size: AppSizes.iconSizeSm, color: c.error),
                     onPressed: () => setState(() => _models.removeAt(mi)),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -201,36 +174,33 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                     children: [
                       Expanded(
                         child: AppTextField(
-                          label: AppStrings.modelName,
+                          label: l10n.fieldModelName,
                           controller: model.nameCtrl,
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
+                          validator: (v) => v == null || v.isEmpty ? l10n.fieldRequired : null,
                         ),
                       ),
                       const SizedBox(width: AppSizes.sm),
                       Expanded(
                         child: AppTextField(
-                          label: AppStrings.price,
+                          label: l10n.fieldPrice,
                           controller: model.priceCtrl,
                           keyboardType: TextInputType.number,
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
+                          validator: (v) => v == null || v.isEmpty ? l10n.fieldRequired : null,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppSizes.sm),
                   AppTextField(
-                    label: AppStrings.info,
+                    label: l10n.fieldInfo,
                     controller: model.infoCtrl,
                     maxLines: 2,
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) => v == null || v.isEmpty ? l10n.fieldRequired : null,
                   ),
                   const SizedBox(height: AppSizes.sm),
                   AppTextField(
-                    label: AppStrings.images,
-                    hint: AppStrings.imagePlaceholder,
+                    label: l10n.fieldImages,
+                    hint: l10n.imagePlaceholder,
                     controller: model.imagesCtrl,
                   ),
                 ],
@@ -249,12 +219,8 @@ class _ModelRow {
   final TextEditingController infoCtrl;
   final TextEditingController imagesCtrl;
 
-  _ModelRow({
-    String name = '',
-    String price = '',
-    String info = '',
-    String images = '',
-  })  : nameCtrl = TextEditingController(text: name),
+  _ModelRow({String name = '', String price = '', String info = '', String images = ''})
+      : nameCtrl = TextEditingController(text: name),
         priceCtrl = TextEditingController(text: price),
         infoCtrl = TextEditingController(text: info),
         imagesCtrl = TextEditingController(text: images);

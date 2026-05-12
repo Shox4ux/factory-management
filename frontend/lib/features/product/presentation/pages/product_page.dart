@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:factory_management/app/di/injection.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
-import 'package:factory_management/core/constants/app_strings.dart';
 import 'package:factory_management/core/theme/app_theme.dart';
 import 'package:factory_management/core/utils/app_toast.dart';
 import 'package:factory_management/features/factory/domain/entities/factory_entity.dart';
 import 'package:factory_management/features/factory/presentation/bloc/factory_bloc.dart';
 import 'package:factory_management/features/factory/presentation/bloc/factory_event.dart';
 import 'package:factory_management/features/factory/presentation/bloc/factory_state.dart';
-import 'package:factory_management/features/product/domain/entities/product_entity.dart';
 import 'package:factory_management/features/product/domain/entities/model_entity.dart';
+import 'package:factory_management/features/product/domain/entities/product_entity.dart';
 import 'package:factory_management/features/product/presentation/bloc/product_bloc.dart';
 import 'package:factory_management/features/product/presentation/bloc/product_event.dart';
 import 'package:factory_management/features/product/presentation/bloc/product_state.dart';
 import 'package:factory_management/features/product/presentation/widgets/product_form_dialog.dart';
+import 'package:factory_management/l10n/app_localizations.dart';
 import 'package:factory_management/shared/widgets/app_dialog.dart';
 import 'package:factory_management/shared/widgets/page_layout.dart';
 
@@ -78,6 +78,7 @@ class _ProductPageContentState extends State<_ProductPageContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocListener<ProductBloc, ProductState>(
       listener: (context, state) {
         if (state is ProductActionSuccess) {
@@ -87,23 +88,23 @@ class _ProductPageContentState extends State<_ProductPageContent> {
         }
       },
       child: PageLayout(
-        title: AppStrings.products,
-        addLabel: AppStrings.addProductItem,
+        title: l10n.navProducts,
+        addLabel: l10n.addProduct,
         onAdd: () => _showForm(),
         filterWidgets: [
           FilterField(
-            hint: AppStrings.searchByName,
+            hint: l10n.searchByName,
             onChanged: (v) => setState(() => _nameFilter = v.toLowerCase()),
           ),
           BlocBuilder<FactoryBloc, FactoryState>(
             builder: (context, factState) {
               final factories = _getFactories(factState);
               return FilterDropdown<int>(
-                hint: 'Filter by factory',
+                hint: l10n.filterByFactory,
                 icon: Icons.factory_outlined,
                 value: _factoryFilter,
                 items: [
-                  const DropdownMenuItem<int?>(value: null, child: Text('All factories')),
+                  DropdownMenuItem<int?>(value: null, child: Text(l10n.allFactories)),
                   ...factories.map((f) => DropdownMenuItem<int?>(value: f.id, child: Text(f.name))),
                 ],
                 onChanged: (v) => setState(() => _factoryFilter = v),
@@ -122,7 +123,7 @@ class _ProductPageContentState extends State<_ProductPageContent> {
               return matchesName && matchesFactory;
             }).toList();
             return AppTableWrapper(
-              columns: const [AppStrings.id, AppStrings.name, AppStrings.models, AppStrings.actions],
+              columns: [l10n.colId, l10n.colName, l10n.colModels, l10n.colActions],
               isLoading: state is ProductLoading,
               error: state is ProductError ? state.message : null,
               rows: displayed

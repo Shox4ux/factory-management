@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
 import 'package:factory_management/core/constants/app_sizes.dart';
-import 'package:factory_management/core/constants/app_strings.dart';
 import 'package:factory_management/core/theme/app_theme.dart';
+import 'package:factory_management/l10n/app_localizations.dart';
 import 'package:factory_management/shared/widgets/app_button.dart';
 
 class AppDialog extends StatelessWidget {
@@ -17,7 +17,7 @@ class AppDialog extends StatelessWidget {
     super.key,
     required this.title,
     required this.content,
-    this.confirmLabel = AppStrings.create,
+    required this.confirmLabel,
     required this.onConfirm,
     this.isLoading = false,
     this.maxWidth = AppSizes.dialogMaxWidth,
@@ -25,6 +25,7 @@ class AppDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final c = AppThemeColors.of(context);
     return Dialog(
       backgroundColor: c.surface,
@@ -65,7 +66,7 @@ class AppDialog extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   AppButton(
-                    label: AppStrings.cancel,
+                    label: l10n.actionCancel,
                     variant: AppButtonVariant.secondary,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -89,16 +90,28 @@ Future<bool?> showConfirmDialog(BuildContext context, {String? title, String? me
   return showDialog<bool>(
     context: context,
     builder: (dialogCtx) {
+      final l10n = AppLocalizations.of(dialogCtx)!;
       final c = AppThemeColors.of(dialogCtx);
       return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusLg)),
         backgroundColor: c.surface,
-        title: Text(title ?? AppStrings.deleteConfirmTitle, style: TextStyle(fontSize: AppFonts.lg, fontWeight: FontWeight.w700, color: c.textPrimary)),
-        content: Text(message ?? AppStrings.confirmDelete, style: TextStyle(color: c.textSecondary)),
+        title: Text(
+          title ?? l10n.confirmDeleteTitle,
+          style: TextStyle(fontSize: AppFonts.lg, fontWeight: FontWeight.w700, color: c.textPrimary),
+        ),
+        content: Text(message ?? l10n.confirmDeleteMessage, style: TextStyle(color: c.textSecondary)),
         actions: [
-          AppButton(label: AppStrings.cancel, variant: AppButtonVariant.secondary, onPressed: () => Navigator.of(dialogCtx).pop(false)),
+          AppButton(
+            label: l10n.actionCancel,
+            variant: AppButtonVariant.secondary,
+            onPressed: () => Navigator.of(dialogCtx).pop(false),
+          ),
           const SizedBox(width: 8),
-          AppButton(label: AppStrings.delete, variant: AppButtonVariant.danger, onPressed: () => Navigator.of(dialogCtx).pop(true)),
+          AppButton(
+            label: l10n.actionDelete,
+            variant: AppButtonVariant.danger,
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
+          ),
         ],
       );
     },
