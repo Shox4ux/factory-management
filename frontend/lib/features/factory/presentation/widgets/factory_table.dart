@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
 import 'package:factory_management/core/theme/app_theme.dart';
 import 'package:factory_management/features/factory/domain/entities/factory_entity.dart';
@@ -40,10 +41,10 @@ class FactoryTable extends StatelessWidget {
       error: error,
       rows: factories.map((f) => DataRow(cells: [
         DataCell(Text('${f.id}', style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
-        DataCell(Text(f.name, style: const TextStyle(fontWeight: FontWeight.w600))),
+        DataCell(_CopyableCell(f.name, style: const TextStyle(fontWeight: FontWeight.w600))),
         DataCell(Text(f.factoryCategory?.categoryName ?? '—', style: const TextStyle(fontSize: AppFonts.base))),
-        DataCell(Text(f.phone ?? '—', style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
-        DataCell(Text(f.wechatId ?? '—', style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
+        DataCell(_CopyableCell(f.phone, style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
+        DataCell(_CopyableCell(f.wechatId, style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
         DataCell(Text(f.address ?? '—', style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
         DataCell(
           Wrap(
@@ -71,6 +72,42 @@ class FactoryTable extends StatelessWidget {
         ),
         DataCell(actionCell(context, onEdit: () => onEdit(f), onDelete: () => onDelete(f))),
       ])).toList(),
+    );
+  }
+}
+
+class _CopyableCell extends StatelessWidget {
+  final String? value;
+  final TextStyle? style;
+
+  const _CopyableCell(this.value, {this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    if (value == null || value!.isEmpty) {
+      return Text('—', style: style);
+    }
+    return Tooltip(
+      message: 'Click to copy',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () async {
+            await Clipboard.setData(ClipboardData(text: value!));
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Copied: $value'),
+                  duration: const Duration(seconds: 1),
+                  behavior: SnackBarBehavior.floating,
+                  width: 220,
+                ),
+              );
+            }
+          },
+          child: Text(value!, style: style),
+        ),
+      ),
     );
   }
 }
