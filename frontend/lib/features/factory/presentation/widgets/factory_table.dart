@@ -45,7 +45,7 @@ class FactoryTable extends StatelessWidget {
         DataCell(Text(f.factoryCategory?.categoryName ?? '—', style: const TextStyle(fontSize: AppFonts.base))),
         DataCell(_CopyableCell(f.phone, style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
         DataCell(_CopyableCell(f.wechatId, style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
-        DataCell(Text(f.address ?? '—', style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
+        DataCell(_CopyableCell(f.address, style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
         DataCell(
           Wrap(
             spacing: 4,
