@@ -63,6 +63,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addModel => 'Добавить модель';
 
   @override
+  String get addImages => 'Добавить изображения';
+
+  @override
   String get addCategory => 'Добавить категорию';
 
   @override
@@ -99,7 +102,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get fieldInfo => 'Информация / Описание';
 
   @override
-  String get fieldImages => 'URL изображений (через запятую)';
+  String get fieldImages => 'Изображения';
 
   @override
   String get fieldCategoryName => 'Название категории';

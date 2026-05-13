@@ -29,6 +29,8 @@ services:
         condition: service_healthy
     restart: always
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - upload_images:/app/static/images
 
   frontend:
     build:
@@ -40,3 +42,4 @@ services:
 
 volumes:
   postgres_data:
+  upload_images:

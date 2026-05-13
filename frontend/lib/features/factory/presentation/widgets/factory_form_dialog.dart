@@ -13,6 +13,7 @@ import 'package:factory_management/l10n/app_localizations.dart';
 import 'package:factory_management/shared/widgets/app_button.dart';
 import 'package:factory_management/shared/widgets/app_dialog.dart';
 import 'package:factory_management/shared/widgets/app_text_field.dart';
+import 'package:factory_management/shared/widgets/image_picker_field.dart';
 
 class FactoryFormDialog extends StatefulWidget {
   final FactoryEntity? factory;
@@ -41,7 +42,10 @@ class _FactoryFormDialogState extends State<FactoryFormDialog> {
       for (final p in widget.factory!.products) {
         final row = _ProductRow(name: p.name);
         for (final m in p.models) {
-          row.models.add(_ModelRow(name: m.name, price: m.price.toString(), info: m.info, images: m.images ?? ''));
+          row.models.add(_ModelRow(
+          name: m.name, price: m.price.toString(), info: m.info,
+          imageUrls: (m.images ?? '').split(',').where((s) => s.isNotEmpty).toList(),
+        ));
         }
         _products.add(row);
       }
@@ -68,7 +72,7 @@ class _FactoryFormDialogState extends State<FactoryFormDialog> {
           'name': m.nameCtrl.text.trim(),
           'price': m.priceCtrl.text.trim(),
           'info': m.infoCtrl.text.trim(),
-          if (m.imagesCtrl.text.trim().isNotEmpty) 'images': m.imagesCtrl.text.trim(),
+          if (m.imageUrls.isNotEmpty) 'images': m.imageUrls.join(','),
         }).toList(),
       }).toList(),
     };
@@ -253,7 +257,10 @@ class _FactoryFormDialogState extends State<FactoryFormDialog> {
             const SizedBox(height: AppSizes.sm),
             AppTextField(label: l10n.fieldInfo, controller: model.infoCtrl, maxLines: 2, validator: (v) => v == null || v.isEmpty ? l10n.fieldRequired : null),
             const SizedBox(height: AppSizes.sm),
-            AppTextField(label: l10n.fieldImages, hint: l10n.imagePlaceholder, controller: model.imagesCtrl),
+            ImagePickerField(
+              initialUrls: model.imageUrls,
+              onChanged: (urls) => setState(() => model.imageUrls = urls),
+            ),
           ],
         ),
       );
@@ -273,10 +280,10 @@ class _ModelRow {
   final TextEditingController nameCtrl;
   final TextEditingController priceCtrl;
   final TextEditingController infoCtrl;
-  final TextEditingController imagesCtrl;
-  _ModelRow({String name = '', String price = '', String info = '', String images = ''})
+  List<String> imageUrls;
+  _ModelRow({String name = '', String price = '', String info = '', List<String>? imageUrls})
       : nameCtrl = TextEditingController(text: name),
         priceCtrl = TextEditingController(text: price),
         infoCtrl = TextEditingController(text: info),
-        imagesCtrl = TextEditingController(text: images);
+        imageUrls = imageUrls ?? [];
 }

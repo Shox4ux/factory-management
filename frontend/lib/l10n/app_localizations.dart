@@ -208,6 +208,12 @@ abstract class AppLocalizations {
   /// **'Add Model'**
   String get addModel;
 
+  /// No description provided for @addImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Add images'**
+  String get addImages;
+
   /// No description provided for @addCategory.
   ///
   /// In en, this message translates to:
@@ -283,7 +289,7 @@ abstract class AppLocalizations {
   /// No description provided for @fieldImages.
   ///
   /// In en, this message translates to:
-  /// **'Image URLs (comma-separated)'**
+  /// **'Images'**
   String get fieldImages;
 
   /// No description provided for @fieldCategoryName.

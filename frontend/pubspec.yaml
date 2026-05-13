@@ -33,6 +33,9 @@ dependencies:
   # Functional
   dartz: ^0.10.1
 
+  # File picking
+  file_picker: ^8.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

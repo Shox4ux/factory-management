@@ -63,6 +63,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get addModel => 'Model qo\'shish';
 
   @override
+  String get addImages => 'Rasm qo\'shish';
+
+  @override
   String get addCategory => 'Kategoriya qo\'shish';
 
   @override
@@ -99,7 +102,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get fieldInfo => 'Ma\'lumot / Tavsif';
 
   @override
-  String get fieldImages => 'Rasm URL\'lari (vergul bilan)';
+  String get fieldImages => 'Rasmlar';
 
   @override
   String get fieldCategoryName => 'Kategoriya nomi';

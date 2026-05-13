@@ -63,6 +63,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addModel => 'Add Model';
 
   @override
+  String get addImages => 'Add images';
+
+  @override
   String get addCategory => 'Add Category';
 
   @override
@@ -99,7 +102,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldInfo => 'Info / Description';
 
   @override
-  String get fieldImages => 'Image URLs (comma-separated)';
+  String get fieldImages => 'Images';
 
   @override
   String get fieldCategoryName => 'Category Name';
