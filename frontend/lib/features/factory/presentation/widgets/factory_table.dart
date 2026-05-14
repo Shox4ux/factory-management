@@ -120,21 +120,24 @@ class _CopyableCell extends StatelessWidget {
         child: GestureDetector(
           onTap: () async {
             bool copied = false;
+            // execCommand MUST run synchronously before any await,
+            // otherwise the browser's user-gesture context is lost.
             try {
-              await Clipboard.setData(ClipboardData(text: value!));
-              copied = true;
-            } catch (_) {
-              // Fallback for HTTP: navigator.clipboard requires HTTPS
+              final ta = html.TextAreaElement()
+                ..value = value!
+                ..setAttribute('readonly', '')
+                ..style.position = 'absolute'
+                ..style.left = '-9999px';
+              html.document.body!.append(ta);
+              ta.select();
+              copied = html.document.execCommand('copy');
+              ta.remove();
+            } catch (_) {}
+            // Also try the async clipboard API (works on HTTPS).
+            if (!copied) {
               try {
-                final ta = html.TextAreaElement()
-                  ..value = value!
-                  ..style.position = 'fixed'
-                  ..style.opacity = '0';
-                html.document.body!.children.add(ta);
-                ta.focus();
-                ta.select();
-                copied = html.document.execCommand('copy');
-                ta.remove();
+                await Clipboard.setData(ClipboardData(text: value!));
+                copied = true;
               } catch (_) {}
             }
             if (context.mounted) {
