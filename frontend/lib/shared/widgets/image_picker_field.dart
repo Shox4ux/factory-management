@@ -1,3 +1,7 @@
+// ignore_for_file: avoid_web_libraries_in_flutter
+import 'dart:async';
+import 'dart:convert';
+import 'dart:html' as html;
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -53,6 +57,46 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
     widget.onChanged(urls);
   }
 
+  /// Resizes to max 1920px and re-encodes as JPEG (quality 85) in the browser
+  /// using the Canvas API. Falls back to original bytes on any error.
+  Future<({Uint8List bytes, String name})> _compress(
+      Uint8List bytes, String filename) async {
+    try {
+      final blob = html.Blob([bytes]);
+      final objectUrl = html.Url.createObjectUrl(blob);
+      final img = html.ImageElement()..src = objectUrl;
+      await img.onLoad.first;
+      html.Url.revokeObjectUrl(objectUrl);
+
+      const maxDim = 1920;
+      var w = img.naturalWidth;
+      var h = img.naturalHeight;
+      if (w == 0 || h == 0) return (bytes: bytes, name: filename);
+
+      if (w > maxDim || h > maxDim) {
+        if (w >= h) {
+          h = (h * maxDim / w).round();
+          w = maxDim;
+        } else {
+          w = (w * maxDim / h).round();
+          h = maxDim;
+        }
+      }
+
+      final canvas = html.CanvasElement(width: w, height: h);
+      canvas.context2D.drawImageScaled(img, 0, 0, w.toDouble(), h.toDouble());
+      final dataUrl = canvas.toDataUrl('image/jpeg', 0.85);
+      final base64Data = dataUrl.split(',').last;
+      final compressed = base64Decode(base64Data);
+      final baseName = filename.contains('.')
+          ? filename.substring(0, filename.lastIndexOf('.'))
+          : filename;
+      return (bytes: compressed, name: '$baseName.jpg');
+    } catch (_) {
+      return (bytes: bytes, name: filename);
+    }
+  }
+
   Future<void> _pick() async {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
@@ -67,11 +111,14 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
     final newItems = valid.map((f) => _ImageItem(bytes: f.bytes, uploading: true)).toList();
     setState(() => _items.addAll(newItems));
 
-    // Upload all picked files in one request
     try {
+      // Compress each image client-side before uploading
+      final compressed = await Future.wait(
+        valid.map((f) => _compress(f.bytes!, f.name)),
+      );
       final formData = FormData.fromMap({
-        'files': valid
-            .map((f) => MultipartFile.fromBytes(f.bytes!, filename: f.name))
+        'files': compressed
+            .map((c) => MultipartFile.fromBytes(c.bytes, filename: c.name))
             .toList(),
       });
       final response = await _dio.post('/api/v1/upload/images', data: formData);

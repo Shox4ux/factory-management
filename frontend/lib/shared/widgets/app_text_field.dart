@@ -57,7 +57,10 @@ class AppTextField extends StatelessWidget {
           readOnly: readOnly,
           focusNode: focusNode,
           onChanged: onChanged,
-          style: TextStyle(fontSize: AppFonts.base, color: c.textPrimary, fontFamily: AppFonts.inter),
+          style: TextStyle(
+              fontSize: AppFonts.base,
+              color: c.textPrimary,
+              fontFamily: AppFonts.inter),
           decoration: InputDecoration(
             hintText: hint,
             suffixIcon: suffix,
@@ -105,12 +108,17 @@ class AppDropdownField<T> extends StatelessWidget {
         ),
         const SizedBox(height: AppSizes.xs),
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           items: items,
           onChanged: onChanged,
           validator: validator,
-          hint: hint != null ? Text(hint!, style: TextStyle(color: c.textHint)) : null,
-          style: TextStyle(fontSize: AppFonts.base, color: c.textPrimary, fontFamily: AppFonts.inter),
+          hint: hint != null
+              ? Text(hint!, style: TextStyle(color: c.textHint))
+              : null,
+          style: TextStyle(
+              fontSize: AppFonts.base,
+              color: c.textPrimary,
+              fontFamily: AppFonts.inter),
           decoration: const InputDecoration(isDense: true),
           isExpanded: true,
           dropdownColor: c.surface,
