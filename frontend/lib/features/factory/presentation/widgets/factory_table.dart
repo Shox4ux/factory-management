@@ -1,3 +1,6 @@
+// ignore_for_file: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
@@ -39,39 +42,62 @@ class FactoryTable extends StatelessWidget {
       ],
       isLoading: isLoading,
       error: error,
-      rows: factories.map((f) => DataRow(cells: [
-        DataCell(Text('${f.id}', style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
-        DataCell(_CopyableCell(f.name, style: const TextStyle(fontWeight: FontWeight.w600))),
-        DataCell(Text(f.factoryCategory?.categoryName ?? '—', style: const TextStyle(fontSize: AppFonts.base))),
-        DataCell(_CopyableCell(f.phone, style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
-        DataCell(_CopyableCell(f.wechatId, style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
-        DataCell(_CopyableCell(f.address, style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary))),
-        DataCell(
-          Wrap(
-            spacing: 4,
-            children: f.products
-                .take(3)
-                .map((p) => Chip(
-                      label: Text(p.name, style: TextStyle(fontSize: AppFonts.xs, color: c.chipText)),
-                      backgroundColor: c.chipBg,
-                      side: BorderSide.none,
-                      padding: EdgeInsets.zero,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ))
-                .toList()
-              ..addAll(f.products.length > 3
-                  ? [Chip(
-                      label: Text('+${f.products.length - 3}', style: TextStyle(fontSize: AppFonts.xs, color: c.textSecondary)),
-                      backgroundColor: c.tableHeader,
-                      side: BorderSide.none,
-                      padding: EdgeInsets.zero,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    )]
-                  : []),
-          ),
-        ),
-        DataCell(actionCell(context, onEdit: () => onEdit(f), onDelete: () => onDelete(f))),
-      ])).toList(),
+      rows: factories
+          .map((f) => DataRow(cells: [
+                DataCell(Text('${f.id}',
+                    style: TextStyle(
+                        fontSize: AppFonts.sm, color: c.textSecondary))),
+                DataCell(_CopyableCell(f.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600))),
+                DataCell(Text(f.factoryCategory?.categoryName ?? '—',
+                    style: const TextStyle(fontSize: AppFonts.base))),
+                DataCell(_CopyableCell(f.phone,
+                    style: TextStyle(
+                        fontSize: AppFonts.sm, color: c.textSecondary))),
+                DataCell(_CopyableCell(f.wechatId,
+                    style: TextStyle(
+                        fontSize: AppFonts.sm, color: c.textSecondary))),
+                DataCell(_CopyableCell(f.address,
+                    style: TextStyle(
+                        fontSize: AppFonts.sm, color: c.textSecondary))),
+                DataCell(
+                  Wrap(
+                    spacing: 4,
+                    children: f.products
+                        .take(3)
+                        .map((p) => Chip(
+                              label: Text(p.name,
+                                  style: TextStyle(
+                                      fontSize: AppFonts.xs,
+                                      color: c.chipText)),
+                              backgroundColor: c.chipBg,
+                              side: BorderSide.none,
+                              padding: EdgeInsets.zero,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ))
+                        .toList()
+                      ..addAll(f.products.length > 3
+                          ? [
+                              Chip(
+                                label: Text('+${f.products.length - 3}',
+                                    style: TextStyle(
+                                        fontSize: AppFonts.xs,
+                                        color: c.textSecondary)),
+                                backgroundColor: c.tableHeader,
+                                side: BorderSide.none,
+                                padding: EdgeInsets.zero,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              )
+                            ]
+                          : []),
+                  ),
+                ),
+                DataCell(actionCell(context,
+                    onEdit: () => onEdit(f), onDelete: () => onDelete(f))),
+              ]))
+          .toList(),
     );
   }
 }
@@ -93,11 +119,28 @@ class _CopyableCell extends StatelessWidget {
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: () async {
-            await Clipboard.setData(ClipboardData(text: value!));
+            bool copied = false;
+            try {
+              await Clipboard.setData(ClipboardData(text: value!));
+              copied = true;
+            } catch (_) {
+              // Fallback for HTTP: navigator.clipboard requires HTTPS
+              try {
+                final ta = html.TextAreaElement()
+                  ..value = value!
+                  ..style.position = 'fixed'
+                  ..style.opacity = '0';
+                html.document.body!.children.add(ta);
+                ta.focus();
+                ta.select();
+                copied = html.document.execCommand('copy');
+                ta.remove();
+              } catch (_) {}
+            }
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Copied: $value'),
+                  content: Text(copied ? 'Copied: $value' : 'Copy failed'),
                   duration: const Duration(seconds: 1),
                   behavior: SnackBarBehavior.floating,
                   width: 220,
