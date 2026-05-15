@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:factory_management/app/di/injection.dart';
 import 'package:factory_management/core/constants/app_fonts.dart';
+import 'package:factory_management/core/constants/app_sizes.dart';
 import 'package:factory_management/core/theme/app_theme.dart';
 import 'package:factory_management/core/utils/app_toast.dart';
 import 'package:factory_management/features/factory/domain/entities/factory_entity.dart';
@@ -122,21 +125,12 @@ class _ProductPageContentState extends State<_ProductPageContent> {
               final matchesFactory = _factoryFilter == null || p.factoryId == _factoryFilter;
               return matchesName && matchesFactory;
             }).toList();
-            return AppTableWrapper(
-              columns: [l10n.colId, l10n.colName, l10n.colModels, l10n.colActions],
+            return _ExpandableProductTable(
+              products: displayed,
               isLoading: state is ProductLoading,
               error: state is ProductError ? state.message : null,
-              rows: displayed
-                  .map((p) => DataRow(cells: [
-                        DataCell(Text('${p.id}',
-                            style: TextStyle(fontSize: AppFonts.sm, color: AppThemeColors.of(context).textSecondary))),
-                        DataCell(Text(p.name, style: const TextStyle(fontWeight: FontWeight.w600))),
-                        DataCell(_ModelChips(models: p.models)),
-                        DataCell(actionCell(context,
-                            onEdit: () => _showForm(product: p),
-                            onDelete: () => _confirmDelete(p))),
-                      ]))
-                  .toList(),
+              onEdit: (p) => _showForm(product: p),
+              onDelete: _confirmDelete,
             );
           },
         ),
@@ -145,23 +139,299 @@ class _ProductPageContentState extends State<_ProductPageContent> {
   }
 }
 
-class _ModelChips extends StatelessWidget {
-  final List<ModelEntity> models;
-  const _ModelChips({required this.models});
+class _ExpandableProductTable extends StatefulWidget {
+  final List<ProductEntity> products;
+  final bool isLoading;
+  final String? error;
+  final void Function(ProductEntity) onEdit;
+  final void Function(ProductEntity) onDelete;
+
+  const _ExpandableProductTable({
+    required this.products,
+    required this.isLoading,
+    required this.error,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  State<_ExpandableProductTable> createState() => _ExpandableProductTableState();
+}
+
+class _ExpandableProductTableState extends State<_ExpandableProductTable> {
+  final Set<int> _expanded = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final c = AppThemeColors.of(context);
+
+    if (widget.isLoading) {
+      return Center(child: CircularProgressIndicator(color: c.primary));
+    }
+    if (widget.error != null) {
+      final isNetwork = widget.error == 'Unable to reach server';
+      return Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(isNetwork ? Icons.cloud_off_outlined : Icons.error_outline,
+              size: 48, color: isNetwork ? c.textHint : c.error),
+          const SizedBox(height: 12),
+          Text(isNetwork ? l10n.unableToReachServer : widget.error!,
+              style: TextStyle(color: c.textPrimary, fontSize: 15, fontWeight: FontWeight.w500)),
+          if (isNetwork) ...[
+            const SizedBox(height: 4),
+            Text(l10n.checkBackendRunning, style: TextStyle(color: c.textSecondary, fontSize: 13)),
+          ],
+        ]),
+      );
+    }
+    if (widget.products.isEmpty) {
+      return Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.inbox_outlined, size: 48, color: c.textHint),
+          const SizedBox(height: 12),
+          Text(l10n.noData, style: TextStyle(color: c.textSecondary, fontSize: AppFonts.base)),
+        ]),
+      );
+    }
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final width = max(AppSizes.tableMinWidth, constraints.maxWidth - 2 * AppSizes.base);
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSizes.base),
+        child: Card(
+          margin: EdgeInsets.zero,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            side: BorderSide(color: c.border),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: width),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header
+                  Container(
+                    height: AppSizes.tableHeaderHeight,
+                    decoration: BoxDecoration(
+                      color: c.tableHeader,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.radiusMd)),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(children: [
+                      SizedBox(width: 48, child: Text(l10n.colId, style: _headerStyle(c))),
+                      const SizedBox(width: 20),
+                      Expanded(child: Text(l10n.colName, style: _headerStyle(c))),
+                      const SizedBox(width: 20),
+                      SizedBox(width: 80, child: Text(l10n.colModels, style: _headerStyle(c))),
+                      const SizedBox(width: 20),
+                      SizedBox(width: 88, child: Text(l10n.colActions, style: _headerStyle(c))),
+                      const SizedBox(width: 36),
+                    ]),
+                  ),
+                  Divider(height: 1, color: c.border),
+                  // Rows
+                  ...widget.products.map((p) => _ProductExpandableRow(
+                    product: p,
+                    expanded: _expanded.contains(p.id),
+                    onToggle: () => setState(() {
+                      if (_expanded.contains(p.id)) {
+                        _expanded.remove(p.id);
+                      } else {
+                        _expanded.add(p.id);
+                      }
+                    }),
+                    onEdit: () => widget.onEdit(p),
+                    onDelete: () => widget.onDelete(p),
+                  )),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  TextStyle _headerStyle(AppThemeColors c) => TextStyle(
+      fontSize: AppFonts.sm, fontWeight: FontWeight.w600, color: c.textSecondary);
+}
+
+class _ProductExpandableRow extends StatelessWidget {
+  final ProductEntity product;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _ProductExpandableRow({
+    required this.product,
+    required this.expanded,
+    required this.onToggle,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(context);
-    if (models.isEmpty) return Text('—', style: TextStyle(color: c.textHint));
-    return Wrap(
-      spacing: 4,
-      children: models.take(3).map((m) => Chip(
-        label: Text(m.name, style: TextStyle(fontSize: AppFonts.xs, color: c.chipText)),
-        backgroundColor: c.chipBg,
-        side: BorderSide.none,
-        padding: EdgeInsets.zero,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      )).toList(),
+    final l10n = AppLocalizations.of(context)!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Main row
+        InkWell(
+          onTap: onToggle,
+          child: Container(
+            height: AppSizes.tableRowHeight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(children: [
+              SizedBox(
+                width: 48,
+                child: Text('${product.id}',
+                    style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary)),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Text(product.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis),
+              ),
+              const SizedBox(width: 20),
+              SizedBox(
+                width: 80,
+                child: Text('${product.models.length}',
+                    style: TextStyle(color: c.textSecondary, fontSize: AppFonts.sm)),
+              ),
+              const SizedBox(width: 20),
+              SizedBox(
+                width: 88,
+                child: actionCell(context, onEdit: onEdit, onDelete: onDelete),
+              ),
+              SizedBox(
+                width: 36,
+                child: Icon(
+                  expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  size: 20,
+                  color: c.textHint,
+                ),
+              ),
+            ]),
+          ),
+        ),
+        // Expanded models panel
+        if (expanded) _ModelsPanel(models: product.models, l10n: l10n, colors: c),
+        Divider(height: 1, color: c.border),
+      ],
+    );
+  }
+}
+
+class _ModelsPanel extends StatelessWidget {
+  final List<ModelEntity> models;
+  final AppLocalizations l10n;
+  final AppThemeColors colors;
+
+  const _ModelsPanel({required this.models, required this.l10n, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = colors;
+    return Container(
+      color: c.tableHeader,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      child: models.isEmpty
+          ? Text(l10n.noModelsAdded,
+              style: TextStyle(color: c.textHint, fontSize: AppFonts.sm))
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: models.map((m) => _ModelCard(model: m, colors: c)).toList(),
+            ),
+    );
+  }
+}
+
+class _ModelCard extends StatelessWidget {
+  final ModelEntity model;
+  final AppThemeColors colors;
+
+  const _ModelCard({required this.model, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = colors;
+    final imageUrls = (model.images ?? '')
+        .split(',')
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        border: Border.all(color: c.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Name + price row
+          Row(children: [
+            Text(model.name,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: AppFonts.base)),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: c.primaryLight,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('\$${model.price.toStringAsFixed(2)}',
+                  style: TextStyle(
+                      fontSize: AppFonts.xs, color: c.primary, fontWeight: FontWeight.w600)),
+            ),
+          ]),
+          if (model.info.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(model.info,
+                style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis),
+          ],
+          if (imageUrls.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: imageUrls.map((url) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                    child: Image.network(
+                      url,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 72,
+                        height: 72,
+                        color: c.border,
+                        child: Icon(Icons.broken_image_outlined,
+                            size: 28, color: c.textHint),
+                      ),
+                    ),
+                  ),
+                )).toList(),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
