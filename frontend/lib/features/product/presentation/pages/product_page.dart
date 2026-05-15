@@ -161,6 +161,14 @@ class _ExpandableProductTable extends StatefulWidget {
 class _ExpandableProductTableState extends State<_ExpandableProductTable> {
   final Set<int> _expanded = {};
 
+  void _toggle(int id) => setState(() {
+        if (_expanded.contains(id)) {
+          _expanded.remove(id);
+        } else {
+          _expanded.add(id);
+        }
+      });
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -213,40 +221,34 @@ class _ExpandableProductTableState extends State<_ExpandableProductTable> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header
+                  // Header — matches DataTable heading style exactly
                   Container(
                     height: AppSizes.tableHeaderHeight,
                     decoration: BoxDecoration(
                       color: c.tableHeader,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.radiusMd)),
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(AppSizes.radiusMd)),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(children: [
-                      SizedBox(width: 48, child: Text(l10n.colId, style: _headerStyle(c))),
+                      Expanded(child: Text(l10n.colId, style: _hStyle(c))),
                       const SizedBox(width: 20),
-                      Expanded(child: Text(l10n.colName, style: _headerStyle(c))),
+                      Expanded(child: Text(l10n.colName, style: _hStyle(c))),
                       const SizedBox(width: 20),
-                      SizedBox(width: 80, child: Text(l10n.colModels, style: _headerStyle(c))),
+                      Expanded(child: Text(l10n.colModels, style: _hStyle(c))),
                       const SizedBox(width: 20),
-                      SizedBox(width: 88, child: Text(l10n.colActions, style: _headerStyle(c))),
-                      const SizedBox(width: 36),
+                      Expanded(child: Text(l10n.colActions, style: _hStyle(c))),
+                      const SizedBox(width: 32), // chevron placeholder
                     ]),
                   ),
                   Divider(height: 1, color: c.border),
-                  // Rows
                   ...widget.products.map((p) => _ProductExpandableRow(
-                    product: p,
-                    expanded: _expanded.contains(p.id),
-                    onToggle: () => setState(() {
-                      if (_expanded.contains(p.id)) {
-                        _expanded.remove(p.id);
-                      } else {
-                        _expanded.add(p.id);
-                      }
-                    }),
-                    onEdit: () => widget.onEdit(p),
-                    onDelete: () => widget.onDelete(p),
-                  )),
+                        product: p,
+                        expanded: _expanded.contains(p.id),
+                        onToggle: () => _toggle(p.id),
+                        onEdit: () => widget.onEdit(p),
+                        onDelete: () => widget.onDelete(p),
+                      )),
                 ],
               ),
             ),
@@ -256,7 +258,7 @@ class _ExpandableProductTableState extends State<_ExpandableProductTable> {
     });
   }
 
-  TextStyle _headerStyle(AppThemeColors c) => TextStyle(
+  TextStyle _hStyle(AppThemeColors c) => TextStyle(
       fontSize: AppFonts.sm, fontWeight: FontWeight.w600, color: c.textSecondary);
 }
 
@@ -283,41 +285,52 @@ class _ProductExpandableRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Main row
-        InkWell(
-          onTap: onToggle,
-          child: Container(
-            height: AppSizes.tableRowHeight,
+        // Row — same height / padding / font as DataTable data rows
+        SizedBox(
+          height: AppSizes.tableRowHeight,
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(children: [
-              SizedBox(
-                width: 48,
+              // ID
+              Expanded(
                 child: Text('${product.id}',
                     style: TextStyle(fontSize: AppFonts.sm, color: c.textSecondary)),
               ),
               const SizedBox(width: 20),
+              // Name
               Expanded(
                 child: Text(product.name,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                     overflow: TextOverflow.ellipsis),
               ),
               const SizedBox(width: 20),
-              SizedBox(
-                width: 80,
-                child: Text('${product.models.length}',
-                    style: TextStyle(color: c.textSecondary, fontSize: AppFonts.sm)),
-              ),
+              // Models — same chips as before
+              Expanded(child: _ModelChips(models: product.models)),
               const SizedBox(width: 20),
-              SizedBox(
-                width: 88,
-                child: actionCell(context, onEdit: onEdit, onDelete: onDelete),
-              ),
-              SizedBox(
-                width: 36,
-                child: Icon(
-                  expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                  size: 20,
-                  color: c.textHint,
+              // Actions + chevron in same column space
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    actionCell(context, onEdit: onEdit, onDelete: onDelete),
+                    const SizedBox(width: 8),
+                    // Chevron — the only affordance that triggers expand
+                    SizedBox(
+                      width: 24,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: Icon(
+                          expanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          size: 20,
+                          color: c.textHint,
+                        ),
+                        onPressed: onToggle,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ]),
@@ -327,6 +340,29 @@ class _ProductExpandableRow extends StatelessWidget {
         if (expanded) _ModelsPanel(models: product.models, l10n: l10n, colors: c),
         Divider(height: 1, color: c.border),
       ],
+    );
+  }
+}
+
+class _ModelChips extends StatelessWidget {
+  final List<ModelEntity> models;
+  const _ModelChips({required this.models});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppThemeColors.of(context);
+    if (models.isEmpty) return Text('—', style: TextStyle(color: c.textHint));
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: models.take(3).map((m) => Chip(
+            label: Text(m.name,
+                style: TextStyle(fontSize: AppFonts.xs, color: c.chipText)),
+            backgroundColor: c.chipBg,
+            side: BorderSide.none,
+            padding: EdgeInsets.zero,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          )).toList(),
     );
   }
 }
