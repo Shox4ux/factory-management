@@ -123,14 +123,13 @@ class _ProductPageContentState extends State<_ProductPageContent> {
               return matchesName && matchesFactory;
             }).toList();
             return AppTableWrapper(
-              columns: [l10n.colId, l10n.colImage, l10n.colName, l10n.colModels, l10n.colActions],
+              columns: [l10n.colId, l10n.colName, l10n.colModels, l10n.colActions],
               isLoading: state is ProductLoading,
               error: state is ProductError ? state.message : null,
               rows: displayed
                   .map((p) => DataRow(cells: [
                         DataCell(Text('${p.id}',
                             style: TextStyle(fontSize: AppFonts.sm, color: AppThemeColors.of(context).textSecondary))),
-                        DataCell(_ProductThumb(product: p)),
                         DataCell(Text(p.name, style: const TextStyle(fontWeight: FontWeight.w600))),
                         DataCell(_ModelChips(models: p.models)),
                         DataCell(actionCell(context,
@@ -141,41 +140,6 @@ class _ProductPageContentState extends State<_ProductPageContent> {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class _ProductThumb extends StatelessWidget {
-  final ProductEntity product;
-  const _ProductThumb({required this.product});
-
-  String? _firstImageUrl() {
-    for (final m in product.models) {
-      if (m.images != null && m.images!.isNotEmpty) {
-        final url = m.images!.split(',').firstWhere((s) => s.isNotEmpty, orElse: () => '');
-        if (url.isNotEmpty) return url;
-      }
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final url = _firstImageUrl();
-    if (url == null) {
-      return Icon(Icons.image_not_supported_outlined,
-          size: 36, color: AppThemeColors.of(context).textHint);
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
-      child: Image.network(
-        url,
-        width: 48,
-        height: 48,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(Icons.broken_image_outlined,
-            size: 36, color: AppThemeColors.of(context).textHint),
       ),
     );
   }
