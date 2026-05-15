@@ -358,6 +358,12 @@ abstract class AppLocalizations {
   /// **'Products'**
   String get colProducts;
 
+  /// No description provided for @colImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get colImage;
+
   /// No description provided for @colModels.
   ///
   /// In en, this message translates to:

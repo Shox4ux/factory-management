@@ -138,6 +138,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get colProducts => 'Mahsulotlar';
 
   @override
+  String get colImage => 'Rasm';
+
+  @override
   String get colModels => 'Modellar';
 
   @override

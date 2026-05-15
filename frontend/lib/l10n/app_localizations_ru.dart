@@ -138,6 +138,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get colProducts => 'Продукты';
 
   @override
+  String get colImage => 'Фото';
+
+  @override
   String get colModels => 'Модели';
 
   @override

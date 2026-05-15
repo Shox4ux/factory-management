@@ -138,6 +138,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get colProducts => 'Products';
 
   @override
+  String get colImage => 'Image';
+
+  @override
   String get colModels => 'Models';
 
   @override
