@@ -316,16 +316,18 @@ class _ProductExpandableRow extends StatelessWidget {
                     const SizedBox(width: 8),
                     // Chevron — the only affordance that triggers expand
                     SizedBox(
-                      width: 24,
+                      width: 28,
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: Icon(
-                          expanded
-                              ? Icons.keyboard_arrow_up
-                              : Icons.keyboard_arrow_down,
-                          size: 20,
-                          color: c.textHint,
+                        icon: AnimatedRotation(
+                          turns: expanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 22,
+                            color: expanded ? c.primary : c.textSecondary,
+                          ),
                         ),
                         onPressed: onToggle,
                       ),
