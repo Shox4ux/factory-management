@@ -216,8 +216,8 @@ class _ExpandableProductTableState extends State<_ExpandableProductTable> {
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: width),
+            child: SizedBox(
+              width: width,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
